@@ -14,7 +14,7 @@ def parse(file):
                 config.update({'size': 'FULLSCREEN'})
             else:
                 config.update({'size': 
-                    (int(size.split("x")[i]) for i in range(2))
+                    tuple(int(size.split("x")[i]) for i in range(2))
                 })
     return config
 
