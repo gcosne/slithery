@@ -13,7 +13,7 @@ def parse(file):
     config = {}
     for line in file:
         line = line.strip('\n')
-        if 'SIZE' in line:
+        if 'size' in line:
             size = get_config_value(line)
             if size == 'FULLSCREEN':
                 config.update({'size': dim})
@@ -22,10 +22,18 @@ def parse(file):
                     tuple(int(size.split("x")[i]) for i in range(2))
                 })
 
+        if 'borders' in line:
+            borders = get_config_value(line)
+            config.update({'borders': 
+                # Left, right, top, bottom
+                tuple(borders.split(",")[i] for i in range(4))               
+            })
+
     return config
 
 f = open('config', 'rb')
 config = parse(f)
+print config
 
 x = config['size'][1]
 y = config['size'][0]
@@ -36,9 +44,9 @@ STATE_MENU = 0
 STATE_GAME = 1
 current_state = STATE_MENU
 
-MENU_1PLAYER = 0
+MENU_SINGLEPLAYER = 0
 MENU_MULTIPLAYER = 1
-menu_y = MENU_1PLAYER
+menu_y = MENU_SINGLEPLAYER
 
 c = None
 
@@ -46,29 +54,33 @@ c = None
 while True:
     if current_state == STATE_MENU:
         screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
-        screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_1PLAYER else curses.A_NORMAL)
+        screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_SINGLEPLAYER else curses.A_NORMAL)
         screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
         
     elif current_state == STATE_GAME: 
         if config['size'] != dim:
             # Draw borders
-            screen.addstr(y_center+(y/2+1), x_center-(x/2-1), '-'*(x/2-1))
-            screen.addstr(y_center-(y/2+1), x_center-(x/2-1), '_'*(x/2-1))
+            screen.addstr(y_center-(y/2), x_center-(x/2-1), config['borders'][2]*(x-1))
+            screen.addstr(y_center+(y/2+1), x_center-(x/2-1), config['borders'][3]*(x-1))
             for i in range(y_center-(y/2-1), y_center+(y/2+1)):
-                screen.addstr(i, x_center-x_offset, '|')
-                screen.addstr(i, x_center+x_offset, '|')
+                screen.addstr(i, x_center-x/2, config['borders'][0])
+                screen.addstr(i, x_center+x/2, config['borders'][1])
 
     screen.refresh()    
     c = screen.getch()
 
-    if c == ord('d') and menu_y < 2:
+    if c == ord('d') and menu_y < 1:
         menu_y += 1
     elif c == ord('w') and menu_y > 0:
         menu_y -= 1
     
     if c == ord('\n'):
-        if menu_y == MENU_MULTIPLAYER:
+        if menu_y == MENU_SINGLEPLAYER:
+            screen.clear()
             current_state = STATE_GAME
+
+    if c == ord('q'):
+        break
 
 curses.endwin()
 curses.curs_set(1)
