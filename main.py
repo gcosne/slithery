@@ -11,7 +11,7 @@ def parse(file):
         if 'SIZE' in line:
             size = get_config_value(line)
             if size == 'FULLSCREEN':
-                config.update({'size': 'FULLSCREEN'})
+                config.update({'size': dim})
             else:
                 config.update({'size': 
                     tuple(int(size.split("x")[i]) for i in range(2))
@@ -19,15 +19,14 @@ def parse(file):
 
     return config
 
-f = open("config", 'rb')
+f = open('config', 'rb')
 config = parse(f)
 
 screen = curses.initscr()
 dim = screen.getmaxyx()
-print dim
 
-x_offset = config['size'][1]/2
-y_offset = config['size'][0]/2
+x = config['size'][1]
+y = config['size'][0]
 x_center = dim[1]/2
 y_center = dim[0]/2
 
@@ -38,26 +37,26 @@ current_state = STATE_MENU
 # Main game loop
 while True:
     if current_state == STATE_MENU:
-        screen.addstr(y_center+(y_offset+3), x_center,
-                      "slithery")
-        screen.addstr(y_center+(y_offset+1), x_center,
-                      "1-player")
-        screen.addstr(y_center+(y_offset-1), x_center,
-                      "2-player")
-        screen.addstr(y_center+(y_offset-3), x_center,
-                      "Quit")
+        screen.addstr(y_center+(y/2+3), x_center,
+                      'slithery', curses.A_BOLD)
+        screen.addstr(y_center+(y/2+1), x_center,
+                      '1-player')
+        screen.addstr(y_center+(y/2-1), x_center,
+                      '2-player')
+        screen.addstr(y_center+(y/2-3), x_center,
+                      'Quit')
 
     elif current_state == STATE_GAME: 
-        if config['size'] != 'FULLSCREEN':
+        if config['size'] != dim:
             # Draw borders
-            screen.addstr(y_center+(y_offset+1), x_center-(x_offset-1),
-                          "_"*(config['size'][1]-1))
-            screen.addstr(y_center-(y_offset+1), x_center-(x_offset-1),
-                          "_"*(config['size'][1]-1))
-            for i in range(y_center-(y_offset-1), y_center+(y_offset+1)):
-                screen.addstr(i, x_center-x_offset, "|")
-                screen.addstr(i, x_center+x_offset, "|")
-            
-        screen.refresh()
-        screen.getch()
-        curses.endwin()
+            screen.addstr(y_center+(y/2+1), x_center-(x/2-1),
+                          '-'*(x/2-1))
+            screen.addstr(y_center-(y/2+1), x_center-(x/2-1),
+                          '_'*(x/2-1))
+            for i in range(y_center-(y/2-1), y_center+(y/2+1)):
+                screen.addstr(i, x_center-x_offset, '|')
+                screen.addstr(i, x_center+x_offset, '|')
+    
+    screen.refresh()
+    screen.getch()
+    curses.endwin()
