@@ -1,6 +1,0 @@
-Command Line Snake
-------------------
-
-python main.py <filename>
-filename is the configuration file to read from. If not specified
-it will default to config-singleplayer.txt
