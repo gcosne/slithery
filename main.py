@@ -34,9 +34,9 @@ if config['size'] != 'FULLSCREEN':
 
     # Draw borders
     screen.addstr(y_center+(y_offset+1), x_center-(x_offset-1),
-                  "_________")
+                  "_"*(config['size'][1]-1))
     screen.addstr(y_center-(y_offset+1), x_center-(x_offset-1),
-                  "_________")
+                  "_"*(config['size'][1]-1))
     for i in range(y_center-(y_offset-1), y_center+(y_offset+1)):
         screen.addstr(i, x_center-x_offset, "|")
         screen.addstr(i, x_center+x_offset, "|")

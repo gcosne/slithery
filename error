@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "main.py", line 29, in <module>
-    x_offset = config['size'][1]/2
-TypeError: 'generator' object has no attribute '__getitem__'
