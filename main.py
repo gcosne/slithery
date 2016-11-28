@@ -1,6 +1,8 @@
 import curses
 
 screen = curses.initscr()
+curses.curs_set(0)
+curses.noecho()
 dim = screen.getmaxyx()
 
 def parse(file):
@@ -61,5 +63,10 @@ while True:
         menu_y += 1
     elif c == ord('w') and menu_y > 0:
         menu_y -= 1
+    
+    if c == ord('\n'):
+        if menu_y == 2:
+            break
 
 curses.endwin()
+curses.curs_set(1)
