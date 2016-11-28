@@ -2,8 +2,9 @@ import curses
 import sys
 
 def parse(file):
-    def get_config_value(val):
-        return val.split('=', 1)[1]
+    def get_config_value(str):
+        # Gets the text after '='
+        return str.split('=', 1)[1]
 
     config = {}
     for line in file:
@@ -16,9 +17,9 @@ def parse(file):
                 config.update({'size': 
                     tuple(int(size.split("x")[i]) for i in range(2))
                 })
+
     return config
 
-# Open the config file which is specified as the 2nd argument
 f = open("config", 'rb')
 config = parse(f)
 
@@ -44,3 +45,15 @@ if config['size'] != 'FULLSCREEN':
 screen.refresh()
 screen.getch()
 curses.endwin()
+
+STATE_MENU = 0
+STATE_GAME = 1
+current_state = STATE_MENU
+
+# Main game loop
+while True:
+    if current_state == STATE_MENU:
+        pass
+
+    elif current_state == STATE_GAME:
+        pass
