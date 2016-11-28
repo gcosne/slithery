@@ -1,6 +1,9 @@
 import curses
 import sys
 
+screen = curses.initscr()
+dim = screen.getmaxyx()
+
 def parse(file):
     def get_config_value(val):
         return val.split('=', 1)[1]
@@ -14,7 +17,7 @@ def parse(file):
                 config.update({'size': dim})
             else:
                 config.update({'size': 
-                    [int(size.split("x")[i]) for i in range(2)]
+                    (int(size.split("x")[i]) for i in range(2))
                 })
     return config
 
@@ -22,12 +25,9 @@ def parse(file):
 f = open("config", 'rb')
 config = parse(f)
 
-print config
 x_offset = config['size'][1]/2
 y_offset = config['size'][0]/2
 
-screen = curses.initscr()
-dim = screen.getmaxyx()
 x_center = dim[1]/2
 y_center = dim[0]/2
 
