@@ -1,24 +1,26 @@
 import curses
 import sys
 
-# Open the configuration file which is specified as the 2nd argument
-f = open('config', 'rb')
+# Open the config file which is specified as the 2nd argument
+f = open("config", 'rb')
 config = parse(f)
 
-screen = curses.initscr()
+x_offset = config['size'][1]/2
+y_offset = config['size'][0]/2
 
+screen = curses.initscr()
 dim = screen.getmaxyx()
 x_center = dim[1]/2
 y_center = dim[0]/2
 
 # Draw borders
-screen.addstr(y_center+(offset+1), x_center-(offset-1),
+screen.addstr(y_center+(y_offset+1), x_center-(x_offset-1),
               "_________")
-screen.addstr(y_center-(offset+1), x_center-(offset-1),
+screen.addstr(y_center-(y_offset+1), x_center-(x_offset-1),
               "_________")
-for i in range(y_center-(offset-1), y_center+(offset+1)):
-    screen.addstr(i, x_center-offset, "|")
-    screen.addstr(i, x_center+offset, "|")
+for i in range(y_center-(y_offset-1), y_center+(y_offset+1)):
+    screen.addstr(i, x_center-x_offset, "|")
+    screen.addstr(i, x_center+x_offset, "|")
 screen.refresh()
 screen.getch()
 curses.endwin()
@@ -35,5 +37,5 @@ def parse(file):
                 config_data.update({'size': dim})
             else:
                 config_data.update({'size': 
-                    [size.split("x")[i] for i in range(1)]
+                    [size.split("=")[i] for i in range(1)]
                 })
