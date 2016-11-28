@@ -24,6 +24,7 @@ config = parse(f)
 
 screen = curses.initscr()
 dim = screen.getmaxyx()
+print dim
 
 x_offset = config['size'][1]/2
 y_offset = config['size'][0]/2
@@ -37,8 +38,14 @@ current_state = STATE_MENU
 # Main game loop
 while True:
     if current_state == STATE_MENU:
-        screen.addstr(y_center+(y_offset+3), x_center-(x_offset),
+        screen.addstr(y_center+(y_offset+3), x_center,
                       "slithery")
+        screen.addstr(y_center+(y_offset+1), x_center,
+                      "1-player")
+        screen.addstr(y_center+(y_offset-1), x_center,
+                      "2-player")
+        screen.addstr(y_center+(y_offset-3), x_center,
+                      "Quit")
 
     elif current_state == STATE_GAME: 
         if config['size'] != 'FULLSCREEN':
