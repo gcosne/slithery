@@ -5,21 +5,24 @@ def parse(file):
     def get_config_value(val):
         return val.split('=', 1)[1]
 
-    config_data = {}
+    config = {}
     for line in file:
+        line = line.strip('\n')
         if 'SIZE' in line:
             size = get_config_value(line)
             if size == 'FULLSCREEN':
-                config_data.update({'size': dim})
+                config.update({'size': dim})
             else:
-                config_data.update({'size': 
-                    [size.split("=")[i] for i in range(1)]
+                config.update({'size': 
+                    [int(size.split("x")[i]) for i in range(2)]
                 })
+    return config
 
 # Open the config file which is specified as the 2nd argument
 f = open("config", 'rb')
 config = parse(f)
 
+print config
 x_offset = config['size'][1]/2
 y_offset = config['size'][0]/2
 
