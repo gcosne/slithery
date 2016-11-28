@@ -38,7 +38,6 @@ current_state = STATE_MENU
 
 MENU_1PLAYER = 0
 MENU_MULTIPLAYER = 1
-MENU_QUIT = 2
 menu_y = MENU_1PLAYER
 
 c = None
@@ -46,10 +45,9 @@ c = None
 # Main game loop
 while True:
     if current_state == STATE_MENU:
-        screen.addstr(y_center-3, x_center-4, 'slithery', curses.A_BOLD)
-        screen.addstr(y_center-1, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_1PLAYER else curses.A_NORMAL)
-        screen.addstr(y_center+1, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
-        screen.addstr(y_center+3, x_center-2, 'Quit', curses.A_BOLD if menu_y == MENU_QUIT else curses.A_NORMAL)
+        screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
+        screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_1PLAYER else curses.A_NORMAL)
+        screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
         
     elif current_state == STATE_GAME: 
         if config['size'] != dim:
@@ -69,8 +67,8 @@ while True:
         menu_y -= 1
     
     if c == ord('\n'):
-        if menu_y == MENU_QUIT:
-            break
+        if menu_y == MENU_MULTIPLAYER:
+            current_state = STATE_GAME
 
 curses.endwin()
 curses.curs_set(1)
