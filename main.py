@@ -1,4 +1,6 @@
 import curses
+import sys
+import os
 
 screen = curses.initscr()
 curses.curs_set(0)
@@ -15,12 +17,22 @@ def parse(file):
         line = line.strip('\n')
         if 'size' in line:
             size = get_config_value(line)
+
             if size == 'FULLSCREEN':
                 config.update({'size': dim})
             else:
-                config.update({'size': 
-                    tuple(int(size.split("x")[i]) for i in range(2))
-                })
+                print "Not full screen"
+                size_split = tuple(int(size.split("x")[i]) for i in range(2))
+                print size_split
+
+                if any(size_split) > dim or any(size_split) % 2 != 0:
+                    print "Error: Size must consist of 2 even whole numbers each" \
+                        + "less than the maximum size separated by an 'x'"
+                    curses.endwin()
+                    curses.curs_set(1)
+                    sys.exit(1)
+
+                config.update({'size': size_split})
 
         if 'borders' in line:
             borders = get_config_value(line)
