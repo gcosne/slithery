@@ -21,17 +21,13 @@ def parse(file):
             if size == 'FULLSCREEN':
                 config.update({'size': dim})
             else:
-                print "Not full screen"
                 size_split = tuple(int(size.split("x")[i]) for i in range(2))
-                print size_split
 
-                if any(size_split) > dim or any(size_split) % 2 != 0:
+                if size_split[0] > dim[0] or size_split[1] > dim[1] or any(size_split) % 2 != 0:
                     print "Error: Size must consist of 2 even whole numbers each" \
                         + "less than the maximum size separated by an 'x'"
-                    curses.endwin()
-                    curses.curs_set(1)
-                    sys.exit(1)
-
+                    exit()
+            
                 config.update({'size': size_split})
 
         if 'borders' in line:
@@ -92,7 +88,9 @@ while True:
             current_state = STATE_GAME
 
     if c == ord('q'):
-        break
+        exit()
 
-curses.endwin()
-curses.curs_set(1)
+def exit():
+    curses.endwin()
+    curses.curs_set(1)
+    sys.exit()
