@@ -7,6 +7,16 @@ curses.curs_set(0)
 curses.noecho()
 dim = screen.getmaxyx()
 
+def exit(*args):
+    curses.endwin()
+    curses.curs_set(1)
+    
+    # Reserved for error messages
+    if args[0] != None:
+        print args[0]
+
+    sys.exit()
+
 def parse(file):
     def get_config_value(str):
         # Gets the text after '='
@@ -17,16 +27,15 @@ def parse(file):
         line = line.strip('\n')
         if 'size' in line:
             size = get_config_value(line)
-
             if size == 'FULLSCREEN':
                 config.update({'size': dim})
             else:
                 size_split = tuple(int(size.split("x")[i]) for i in range(2))
 
-                if size_split[0] > dim[0] or size_split[1] > dim[1] or any(size_split) % 2 != 0:
-                    print "Error: Size must consist of 2 even whole numbers each" \
-                        + "less than the maximum size separated by an 'x'"
-                    exit()
+                if size_split[0] > dim[0] or size_split[1] > dim[1] or \
+                        any(size_split) < 0 or any(size_split) % 2 != 0:
+                    exit("Width and height must be even numbers greater than 0 and less than " +
+                            "the maximum dimensions")
             
                 config.update({'size': size_split})
 
@@ -41,7 +50,6 @@ def parse(file):
 
 f = open('config', 'rb')
 config = parse(f)
-print config
 
 x = config['size'][1]
 y = config['size'][0]
@@ -90,7 +98,3 @@ while True:
     if c == ord('q'):
         exit()
 
-def exit():
-    curses.endwin()
-    curses.curs_set(1)
-    sys.exit()
