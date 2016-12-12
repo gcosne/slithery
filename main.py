@@ -57,6 +57,7 @@ def parse(file):
 f = open('config', 'rb')
 config = parse(f)
 
+# curses coordinates are in the format {y, x}
 x = config['size'][1]
 y = config['size'][0]
 x_center = dim[1]/2
@@ -72,23 +73,29 @@ menu_y = MENU_SINGLEPLAYER
 
 c = None
 
+def draw_menu_items():
+    screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
+    screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_SINGLEPLAYER else curses.A_NORMAL)
+    screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
+
+def draw_borders():
+    screen.addstr(y_center-(y/2), x_center-(x/2-1), config['borders'][2]*(x-1))
+    screen.addstr(y_center+(y/2+1), x_center-(x/2-1), config['borders'][3]*(x-1))
+    for i in range(y_center-(y/2-1), y_center+(y/2+1)):
+        screen.addstr(i, x_center-x/2, config['borders'][0])
+        screen.addstr(i, x_center+x/2, config['borders'][1])
+
 # Main game loop
 while True:
     if current_state == STATE_MENU:
-        screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
-        screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_SINGLEPLAYER else curses.A_NORMAL)
-        screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
-        
+        draw_menu_items() 
     elif current_state == STATE_GAME: 
         if config['size'] != dim:
-            # Draw borders
-            screen.addstr(y_center-(y/2), x_center-(x/2-1), config['borders'][2]*(x-1))
-            screen.addstr(y_center+(y/2+1), x_center-(x/2-1), config['borders'][3]*(x-1))
-            for i in range(y_center-(y/2-1), y_center+(y/2+1)):
-                screen.addstr(i, x_center-x/2, config['borders'][0])
-                screen.addstr(i, x_center+x/2, config['borders'][1])
+            draw_borders()
 
-    screen.refresh()    
+    screen.refresh()
+
+    # Check for keyboard input
     c = screen.getch()
 
     if c == ord('d') and menu_y < 1:
