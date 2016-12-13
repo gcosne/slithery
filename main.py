@@ -91,14 +91,13 @@ def init_singleplayer_board():
         board.append(row)
 
 def merge_row_to_string(row):
+    items_text = {ITEM_EMPTY: '^',
+            ITEM_SNAKE: 'O',
+            ITEM_FOOD: '*'}
     string = ""
+
     for i in row:
-        if i == ITEM_EMPTY:
-            string += '^'
-        elif i == ITEM_SNAKE:
-            string += 'O'
-        elif i == ITEM_FOOD:
-            string += '*'
+        string += items_text[i]
     return string
 
 def draw_board():
