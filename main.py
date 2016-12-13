@@ -69,14 +69,40 @@ current_state = STATE_MENU
 
 MENU_SINGLEPLAYER = 0
 MENU_MULTIPLAYER = 1
-menu_y = MENU_SINGLEPLAYER
-
+current_menu = MENU_SINGLEPLAYER 
 c = None
+
+board = []
+ITEM_EMPTY = 0
+ITEM_SNAKE = 1
+ITEM_FOOD = 2
+
+def init_singleplayer_board():
+    for i in range(y):
+        row = []
+        for j in range(x):
+            row.append(ITEM_EMPTY)
+        board.append(row)
+
+def merge_row_to_string(row):
+    string = ""
+    for i in row:
+        if i == ITEM_EMPTY:
+            string += "^"
+        elif i == ITEM_SNAKE:
+            string += "O"
+        elif i == ITEM_FOOD:
+            string += "*"
+    return string
+
+def draw_board():
+    for index, row in enumerate(board):
+        screen.addstr(y_center-(y/2-1)+(index+1), x_center-x/2+1, row)
 
 def draw_menu_items():
     screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
-    screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if menu_y == MENU_SINGLEPLAYER else curses.A_NORMAL)
-    screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if menu_y == MENU_MULTIPLAYER else curses.A_NORMAL)
+    screen.addstr(y_center, x_center-4, '1-player', curses.A_BOLD if current_menu == MENU_SINGLEPLAYER else curses.A_NORMAL)
+    screen.addstr(y_center+2, x_center-6, 'Multi-player', curses.A_BOLD if current_menu == MENU_MULTIPLAYER else curses.A_NORMAL)
 
 def draw_borders():
     screen.addstr(y_center-(y/2), x_center-(x/2-1), config['borders'][2]*(x-1))
@@ -93,18 +119,21 @@ while True:
         if config['size'] != dim:
             draw_borders()
 
+            init_singleplayer_board()
+            draw_board()
+
     screen.refresh()
 
     # Check for keyboard input
     c = screen.getch()
 
-    if c == ord('d') and menu_y < 1:
-        menu_y += 1
-    elif c == ord('w') and menu_y > 0:
-        menu_y -= 1
+    if c == ord('d') and current_menu < 1:
+        current_menu += 1
+    elif c == ord('w') and current_menu > 0:
+        current_menu -= 1
     
     if c == ord('\n'):
-        if menu_y == MENU_SINGLEPLAYER:
+        if current_menu == MENU_SINGLEPLAYER:
             screen.clear()
             current_state = STATE_GAME
 
