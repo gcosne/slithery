@@ -1,6 +1,7 @@
 import curses
 import sys
 import os
+import random
 
 screen = curses.initscr()
 curses.curs_set(0)
@@ -83,12 +84,33 @@ ITEM_EMPTY = 0
 ITEM_SNAKE = 1
 ITEM_FOOD = 2
 
+# Replaces the item at coords with the specified value
+def board_replace(coords, value):
+    board[coords[0]][coords[1]] = value
+
+# Spawn the snake and food at a random location
+def init_spawn():
+    spawn_snake = (random.randint(y/4, y-y/4), random.randint(x/4, x-x/4))
+
+    while True:
+        global spawn_food
+        spawn_food = (random.randint(y/4, y-y/4), random.randint(x/4, x-x/4))
+
+        # Ensure that food and snake don't spawn in the same place
+        if spawn_food != spawn_snake:
+            break
+    
+    board_replace(spawn_snake, ITEM_SNAKE)
+    board_replace(spawn_food, ITEM_FOOD)
+
 def init_singleplayer_board():
     for i in range(y):
         row = []
         for j in range(x):
             row.append(ITEM_EMPTY)
         board.append(row)
+
+    init_spawn()
 
 def merge_row_to_string(row):
     items_text = {ITEM_EMPTY: '^',
@@ -102,8 +124,6 @@ def merge_row_to_string(row):
 
 def draw_board():
     for index, row in enumerate(board):
-        print index
-        print len(row)
         screen.addstr(board_coords['TOP_LEFT'][0]+index, board_coords['TOP_LEFT'][1], merge_row_to_string(row))
 
 def draw_menu_items():
