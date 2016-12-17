@@ -59,6 +59,22 @@ def parse(filename):
             # Left, right, top, bottom
             value.update({'borders': borders_split}) 
 
+        if 'snake' in line:
+            snake_char = get_config_value(line)
+
+            if len(snake_char) != 1:
+                terminate("Error: snake must be only 1 character")
+
+            values.update({'snake': snake_char})
+
+        if 'food' in line:
+            food_char = get_config_value(line)
+            
+            if len(food_char) != 1:
+                terminate("Error: food must be only 1 character")
+
+            values.update({'food': food_char})
+
     return value
 
 config = None
@@ -79,15 +95,15 @@ else:
     values.X_CENTER = dimensions[1]/2
     values.Y_CENTER = dimensions[0]/2
 
-    values.BORDERS = {'TOP': config['borders'][2],
-                      'BOTTOM': config['borders'][3],
-                      'LEFT': config['borders'][0],
-                      'RIGHT': config['borders'][1]}
+    values.BORDERS = {'top': config['borders'][2],
+                      'bottom': config['borders'][3],
+                      'left': config['borders'][0],
+                      'right': config['borders'][1]}
 
-    values.CORNERS = {'TOP_LEFT': (values.y_center-values.height/2+2, values.x_center-values.length/2+1),
-                      'TOP_RIGHT': (values.y_center-values.height/2+2, values.x_center-values.length/2),
-                      'BOTTOM_LEFT': (values.y_center+values.height/2+2, values.x_center-values.length/2+1),
-                      'BOTTOM_RIGHT': (values.y_center+values.height/2+2, values.x_center+values.length/2)}
+    values.CORNERS = {'top_left': (values.y_center-values.height/2+2, values.x_center-values.length/2+1),
+                      'top_right': (values.y_center-values.height/2+2, values.x_center-values.length/2),
+                      'bottom_left': (values.y_center+values.height/2+2, values.x_center-values.length/2+1),
+                      'bottom_right': (values.y_center+values.height/2+2, values.x_center+values.length/2)}
 
 
 # Main game loop
