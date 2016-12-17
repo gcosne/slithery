@@ -18,5 +18,5 @@ class BaseItem:
                             random.randint((1/4)*values.LENGTH, (3/4)*values.LENGTH))
 
             # Ensure there are no other powerups occupying the same spot
-            if board.at(spawn_coords) is None:
+            if board.at(spawn_coords) == '':
                 return spawn_coords
