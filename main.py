@@ -54,12 +54,10 @@ try:
     # slithery.conf is the default file to read from, other files can be specified as
     # the first argument to `python main.py`
     config_file = open(['slithery.conf' if len(sys.argv) == 1 else sys.argv[1]][0], 'rb')
-#except IOError:
-    #terminate("Configuration file does not exist in current directory")
-#else:
+except IOError:
+    terminate("Configuration file does not exist in current directory")
+else:
     config = parse(config_file)
-except ArithmeticError:
-    pass
 
 # Main game loop
 while True:
