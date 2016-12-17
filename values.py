@@ -7,3 +7,14 @@ DIRECTION_UP = 0
 DIRECTION_DOWN = 1
 DIRECTION_LEFT = 2
 DIRECTION_RIGHT = 3
+
+# To be initialized at runtime
+SCREEN_DIMENSIONS = None
+LENGTH = None
+HEIGHT = None
+
+X_CENTER = None
+Y_CENTER = None
+
+BORDERS = None
+CORNERS = None

@@ -4,13 +4,13 @@ import curses
 import sys
 import random
 
+import values
 from Game import Game
-
 
 screen = curses.initscr()
 curses.curs_set(0)
 curses.noecho()
-dimensions = screen.getmaxyx()
+screen_dimensions = screen.getmaxyx()
 
 
 def terminate(*args):
@@ -71,6 +71,23 @@ except IOError:
     terminate("Error: configuration file does not exist in current directory")
 else:
     config = parse(config_file)
+
+    # curses coordinates are in the format (y, x)
+    values.SCREEN_DIMENSIONS = screen_dimensions
+    values.LENGTH = config['size'][1]
+    values.HEIGHT = config['size'][0]
+    values.X_CENTER = dimensions[1]/2
+    values.Y_CENTER = dimensions[0]/2
+
+    values.BORDERS = {'TOP': config['borders'][2],
+                      'BOTTOM': config['borders'][3],
+                      'LEFT': config['borders'][0],
+                      'RIGHT': config['borders'][1]}
+
+    values.CORNERS = {'TOP_LEFT': (values.y_center-values.height/2+2, values.x_center-values.length/2+1),
+                      'TOP_RIGHT': (values.y_center-values.height/2+2, values.x_center-values.length/2),
+                      'BOTTOM_LEFT': (values.y_center+values.height/2+2, values.x_center-values.length/2+1),
+                      'BOTTOM_RIGHT': (values.y_center+values.height/2+2, values.x_center+values.length/2)}
 
 
 # Main game loop
