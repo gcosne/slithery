@@ -1,26 +1,6 @@
 #!/usr/bin/python
 
 class Game:
-    # curses coordinates are in the format {y, x}
-    length = config['size'][0]
-    height = config['size'][0]
-    x_center = dim[1]/2
-    y_center = dim[0]/2
-
-    # Top left, top right, bottom left, bottom right
-    corners = {'TOP_LEFT': (y_center-y/2+2, x_center-x/2+1),
-               'TOP_RIGHT': (y_center-y/2+2, x_center+x/2),
-               'BOTTOM_LEFT': (y_center+y/2+2, x_center-x/2+1),
-               'BOTTOM_RIGHT': (y_center+y/2+2, x_center+x/2)}
-
-    STATE_MENU = 0
-    STATE_GAME = 1
-    current_state = STATE_MENU
-
-    MENU_SINGLEPLAYER = 0
-    MENU_MULTIPLAYER = 1
-    current_menu = MENU_SINGLEPLAYER
-
     board = []
     ITEM_EMPTY = 0
     ITEM_FOOD = 1
@@ -35,20 +15,39 @@ class Game:
     current_direction = None
 
 
-    def draw_menu_items():
-        screen.addstr(y_center-2, x_center-4, 'slithery', curses.A_BOLD)
-        screen.addstr(y_center, x_center-4, '1-player',
-                curses.A_BOLD if current_menu == MENU_SINGLEPLAYER else curses.A_NORMAL)
-        screen.addstr(y_center+2, x_center-6, 'Multi-player',
-                curses.A_BOLD if current_menu == MENU_MULTIPLAYER else curses.A_NORMAL)
+    def __init__(self, config, screen):
+        self.config = config
+        self.screen = screen
+
+        self.dimensions = self.screen.getmaxyx()
+
+        # curses coordinates are in the format {y, x}
+        self.length = self.config['size'][0]
+        self.height = self.config['size'][0]
+        self.x_center = self.dimensions[1]/2
+        self.y_center = self.dimensions[0]/2
+
+        self.borders = {'TOP': self.config['borders'][2],
+                        'BOTTOM': self.config['borders'][3],
+                        'LEFT': self.config['borders'][0],
+                        'RIGHT': self.config['borders'][1]}
+
+        self.corners = {'TOP_LEFT': (self.y_center-self.height/2+2, self.x_center-self.length/2+1),
+                       'TOP_RIGHT': (self.y_center-self.height/2+2, self.x_center+self.length/2),
+                       'BOTTOM_LEFT': (self.y_center+self.height/2+2, self.x_center-self.length/2+1),
+                       'BOTTOM_RIGHT': (self.y_center+self.height/2+2, self.x_center+self.length/2)}
+    
+
+    def start():
+        pass
 
 
     def draw_borders():
-        screen.addstr(corners['TOP_LEFT'][0]-1, corners['TOP_LEFT'][1], config['borders'][2]*x)
-        screen.addstr(corners['BOTTOM_LEFT'][0], corners['BOTTOM_LEFT'][1], config['borders'][3]*x)
-        for i in range(corners['TOP_LEFT'][0], corners['BOTTOM_LEFT'][0]):
-            screen.addstr(i, corners['TOP_LEFT'][1]-1, config['borders'][0])
-            screen.addstr(i, corners['TOP_RIGHT'][1]+1, config['borders'][1])
+        self.screen.addstr(self.corners['TOP_LEFT'][0]-1, self.corners['TOP_LEFT'][1], self.borders['TOP']*x)
+        self.screen.addstr(self.corners['BOTTOM_LEFT'][0], self.corners['BOTTOM_LEFT'][1], self.borders['BOTTOM']*x)
+        for i in range(self.corners['TOP_LEFT'][0], self.corners['BOTTOM_LEFT'][0]):
+            self.screen.addstr(i, self.corners['TOP_LEFT'][1]-1, self.borders['LEFT']) 
+            self.screen.addstr(i, self.corners['TOP_RIGHT'][1]+1, self.borders['RIGHT'])
 
 
     def board_replace(coords, value):
@@ -67,7 +66,7 @@ class Game:
         snake_body = []
         snake_tail = []
 
-        for i in range(height):
+        for i in range(self.height):
             for j in range(width):
                 if board[i][j] == ITEM_SNAKE_HEAD:
                     snake_head.append((i, j))
@@ -84,8 +83,8 @@ class Game:
         
 
         while True:
-            food_spawn = (random.randint(height),
-                          random.randint(length))
+            food_spawn = (random.randint(self.height),
+                          random.randint(self.length))
 
             if food_spawn not in snake.values():
                 return food_spawn
@@ -95,8 +94,8 @@ class Game:
         '''
         Spawn the snake and food at a random location, as well as specify a starting direction
         '''
-        snake_spawn = (random.randint(height/4, height-height/4), 
-                       random.randint(length/4, length-length/4))
+        snake_spawn = (random.randint(self.height/4, self.height-self.height/4), 
+                       random.randint(self.length/4, self.length-self.length/4))
 
         board_replace(snake_spawn, ITEM_SNAKE_HEAD)
         board_replace(spawn_food(), ITEM_FOOD)
@@ -106,7 +105,7 @@ class Game:
 
 
     def init_singleplayer_board():
-        for i in range(height):
+        for i in range(self.height):
             row = []
             for j in range(width):
                 row.append(ITEM_EMPTY)
@@ -130,7 +129,7 @@ class Game:
 
     def draw_board():
         for index, row in enumerate(board):
-            screen.addstr(corners['TOP_LEFT'][0]+index, corners['TOP_LEFT'][1], 
+            self.screen.addstr(self.corners['TOP_LEFT'][0]+index, corners['TOP_LEFT'][1], 
                           merge_row_to_string(row))
 
 
@@ -155,13 +154,11 @@ class Game:
         new_head = coord_add(snake_head, coord_diff[current_direction])
 
         # Out of borders
-        if new_head[0] < corners['TOP_LEFT'][0] or new_head[0] > corners['BOTTOM_LEFT'][0] \
-                or new_head[1] < corners['TOP_LEFT'][1] or new_head[0] > corners['TOP_RIGHT'][1]:
+        if new_head[0] < self.corners['TOP_LEFT'][0] or new_head[0] > corners['BOTTOM_LEFT'][0] \
+                or new_head[1] < self.corners['TOP_LEFT'][1] or new_head[0] > corners['TOP_RIGHT'][1]:
             return 1
         else:
             snake_head = new_head
 
             if snake_head == 0:
                 pass
-
-
