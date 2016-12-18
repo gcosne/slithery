@@ -23,7 +23,7 @@ class BaseItem:
 
 
 class Snake(BaseItem):
-    coords = {}
+    coords = []
 
     def __init__(self, board):
         pass
@@ -36,8 +36,15 @@ class Snake(BaseItem):
             
             # Ensure there are no other powerups occupying the same spot
             if board.at(spawn_coords) == '':
-                self.coords.update({'head': spawn_coords})
+                self.coords.append(spawn_coords)
                 return spawn_coords
+
+
+    def length(self):
+        length = 0
+        for key, value in coords.iteritems():
+            length += len(value)
+        return length
 
 
     def extrapolate(self, direction):
@@ -45,8 +52,20 @@ class Snake(BaseItem):
                              values.DIRECTON_DOWN: (1, 0),
                              values.DIRECTION_LEFT: (0, -1),
                              values.DIRECTION_RIGHT: (0, 1)}
-        
-        return (head[i] + extrapolation_map[direction][i] for i in range(2))
+        return (self.coords[0][i] + extrapolation_map[direction][i] for i in range(2))
+
+
+    def move(self, direction):
+        self.coords.insert(0, self.extrapolate(direction))
+        del self.coords[len(self.coords)-1]
+
+
+    def grow(self, direction):
+        spawn_map = {values.DIRECTION_UP: (1, 0),
+                     values.DIRECTION_DOWN: (-1, 0),
+                     values.DIRECTION_LEFT: (0, -1),
+                     values.DIRECTION_RIGHT: (0, 1)}
+        self.coords.append(spawn_map[direction])
 
 
 class Board:
