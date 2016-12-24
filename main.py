@@ -132,6 +132,9 @@ if __name__ == '__main__':
 
 
     def terminate(*args):
+        curses.endwin()
+        curses.curs_set(1)
+
         # Reserved for error messages
         if len(args) != 0:
             print args[0]
