@@ -7,10 +7,6 @@ import values
 
 
 class BaseItem(object):
-    def __init__(self):
-        pass
-
-
     def get_spawn(self, board):
         while True:
             # Spawn at least a quarter into the board
