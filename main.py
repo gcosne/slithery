@@ -20,7 +20,7 @@ class BaseItem(object):
                 return spawn_coord
 
 
-    def on_touch(self, game):
+    def on_touch(self):
         # To be implemented by child classes
         pass
 
@@ -150,12 +150,11 @@ class Game(object):
                 return False
             elif c in self.direction_map.keys():
                 self.current_direction = self.direction_map[c]
-
+            
             if self.board.within(self.snake.extrapolate(self.current_direction)):
                 self.snake.move(self.current_direction)
             else:
-                continue
-                #return False
+                return False
 
             time.sleep(0.5)
 
