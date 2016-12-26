@@ -1,8 +1,8 @@
 #!/usr/bin/python
-#pylint: skip-file
 import random
 import curses
 import sys
+import math
 import time
 
 import values
@@ -12,8 +12,8 @@ class BaseItem(object):
     def spawn(self, board):
         while True:
             # Spawn at least a quarter into the board
-            spawn_coord = (random.randint((1/4)*values.HEIGHT, (3/4)*values.HEIGHT),
-                           random.randint((1/4)*values.LENGTH, (3/4)*values.LENGTH))
+            spawn_coord = (random.randint(0, values.HEIGHT-1),
+                           random.randint(0, values.LENGTH-1))
 
             # Ensure there are no other powerups occupying the same spot
             if board.at(spawn_coord) == values.ITEM_EMPTY:
@@ -28,9 +28,17 @@ class Snake(BaseItem):
 
 
     def spawn(self, board):
-        spawn_coords = super(Snake, self).spawn(board)
-        self.coords.append(spawn_coords)
-        return spawn_coords
+        while True:
+            spawn_coord = super(Snake, self).spawn(board)
+
+            # A .0 is added at the back to prevent floating point truncation
+            # math.ceil is used to better approximate the upper limit of x and y
+            if spawn_coord[0] in range(int((1.0/4.0)*values.HEIGHT),
+                                       int(math.ceil((3.0/4.0)*values.HEIGHT))+1) \
+               and spawn_coord[1] in range(int((1.0/4.0)*values.LENGTH),
+                                           int(math.ceil((3.0/4.0)*values.LENGTH))+1):
+                self.coords.append(spawn_coord)
+                return spawn_coord
 
 
     def extrapolate(self, direction):
@@ -83,7 +91,7 @@ class Board(object):
 
         for index, row in enumerate(self.grid):
             self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
-                               ''.join(list([item_map[item] for item in row])))
+                               ' '.join(list([item_map[item] for item in row])))
 
 
     def apply(self, items):
