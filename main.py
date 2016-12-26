@@ -145,7 +145,6 @@ class Game(object):
 
         while True:
             self.board.apply({values.ITEM_SNAKE: self.snake.coords})
-            logging.debug('snakecoords: ' + ', '.join(str(e) for e in self.snake.coords))
             self.board.draw()
             self.screen.refresh()
 
@@ -157,9 +156,7 @@ class Game(object):
             elif c in self.direction_map.keys():
                 self.current_direction = self.direction_map[c]
 
-            extrapolate = self.snake.extrapolate(self.current_direction)
-            logging.debug('extrapolate: ' + ', '.join(str(e) for e in extrapolate))
-            if self.board.within(extrapolate):
+            if self.board.within(self.snake.extrapolate(self.current_direction)):
                 self.snake.move(self.current_direction)
             else:
                 return False
@@ -249,6 +246,17 @@ if __name__ == '__main__':
 
                 value.update({'food': display_food})
 
+            if 'empty' in line:
+                display_empty = get_config_value(line)
+
+                if display_empty == 'SPACE':
+                    value.update({'empty': ' '})
+                else:
+                    if len(display_empty) != 1:
+                        terminate('Error: empty item must be only 1 character')
+
+                    value.update({'empty': display_empty})
+
             if 'player1_keys' in line:
                 player1_keys = get_config_value(line)
                 player1_keys_split = tuple(player1_keys.split(',')[i] for i in range(4))
@@ -309,6 +317,7 @@ if __name__ == '__main__':
 
         values.DISPLAY_SNAKE = config['snake']
         values.DISPLAY_FOOD = config['food']
+        values.DISPLAY_EMPTY = config['empty']
 
         values.PLAYER_KEYS.append(config['player1_keys'])
         values.QUIT_KEY = config['quit_key']

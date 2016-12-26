@@ -9,8 +9,6 @@ DIRECTION_DOWN = 1
 DIRECTION_LEFT = 2
 DIRECTION_RIGHT = 3
 
-DISPLAY_EMPTY = '.'
-
 # To be initialized at runtime
 SCREEN_DIMENSIONS = None
 LENGTH = None
@@ -24,6 +22,7 @@ CORNERS = None
 
 DISPLAY_SNAKE = None
 DISPLAY_FOOD = None
+DISPLAY_EMPTY = None
 
 PLAYER_KEYS = []
 QUIT_KEY = None
