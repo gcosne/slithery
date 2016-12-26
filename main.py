@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#pylint: skip-file
 import random
 import curses
 import sys
@@ -15,7 +16,7 @@ class BaseItem(object):
                            random.randint((1/4)*values.LENGTH, (3/4)*values.LENGTH))
 
             # Ensure there are no other powerups occupying the same spot
-            if board.at(spawn_coord) == '':
+            if board.at(spawn_coord) == values.ITEM_EMPTY:
                 return spawn_coord
 
 
@@ -62,7 +63,7 @@ class Board(object):
         for i in range(values.HEIGHT):
             row = []
             for j in range(values.LENGTH):
-                row.append('')
+                row.append(values.ITEM_EMPTY)
             self.grid.append(row)
 
 
@@ -76,28 +77,29 @@ class Board(object):
 
 
     def draw(self):
+        item_map = {values.ITEM_FOOD: values.DISPLAY_FOOD,
+                    values.ITEM_SNAKE: values.DISPLAY_SNAKE,
+                    values.ITEM_EMPTY: values.DISPLAY_EMPTY}
+
         for index, row in enumerate(self.grid):
             self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
-                               ''.join(row))
+                               ''.join(list([item_map[item] for item in row])))
 
 
     def apply(self, items):
         def replace(item, coord):
             self.grid[coord[0]][coord[1]] = item
 
-        item_map = {values.ITEM_FOOD: values.DISPLAY_FOOD,
-                    values.ITEM_SNAKE: values.DISPLAY_SNAKE}
-
         self.__clear()
         for key, coords in items.iteritems():
             for coord in coords:
-                replace(item_map[key], coord)
+                replace(key, coord)
 
 
     def __clear(self):
         for i in range(values.HEIGHT):
             for j in range(values.LENGTH):
-                self.grid[i][j] = ''
+                self.grid[i][j] = values.ITEM_EMPTY
 
 
 class Game(object):
@@ -118,10 +120,14 @@ class Game(object):
         self.board = Board(self.screen)
 
         self.snake = Snake()
-        self.snake.spawn(self.board)
+        self.board.apply({values.ITEM_SNAKE: [self.snake.spawn(self.board)]})
+        self.board.draw()
+        self.screen.refresh()
 
         while True:
-            print "hi"
+            self.screen.getch()
+            break
+            '''
             c = self.screen.getch()
 
             if c == ord('q'):
@@ -144,7 +150,7 @@ class Game(object):
             self.board.draw()
             self.screen.refresh()
             time.sleep(0.5)
-
+            '''
 
     def draw_borders(self):
         # Draw sides
