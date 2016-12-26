@@ -150,7 +150,7 @@ class Game(object):
 
             c = self.screen.getch()
             
-            time.sleep(0.5)
+            time.sleep(values.ITERATION_DELAY)
             if c == ord('q'):
                 return False
             elif c in self.direction_map.keys():
@@ -257,6 +257,15 @@ if __name__ == '__main__':
 
                     value.update({'empty': display_empty})
 
+            if 'iteration_delay' in line:
+                iteration_delay_str = get_config_value(line)
+                iteration_delay_float = float(iteration_delay_str)
+
+                if iteration_delay_float < 0.1 or iteration_delay_float > 2:
+                    terminate('Error: iteration delay must be between 0.1 and 2 seconds')
+
+                value.update({'iteration_delay': iteration_delay_float})
+
             if 'player1_keys' in line:
                 player1_keys = get_config_value(line)
                 player1_keys_split = tuple(player1_keys.split(',')[i] for i in range(4))
@@ -318,6 +327,8 @@ if __name__ == '__main__':
         values.DISPLAY_SNAKE = config['snake']
         values.DISPLAY_FOOD = config['food']
         values.DISPLAY_EMPTY = config['empty']
+
+        values.ITERATION_DELAY = config['iteration_delay']
 
         values.PLAYER_KEYS.append(config['player1_keys'])
         values.QUIT_KEY = config['quit_key']
