@@ -2,20 +2,21 @@
 import random
 import curses
 import sys
+import time
 
 import values
 
 
 class BaseItem(object):
-    def get_spawn(self, board):
+    def spawn(self, board):
         while True:
             # Spawn at least a quarter into the board
-            spawn_coords = (random.randint((1/4)*values.HEIGHT, (3/4)*values.HEIGHT),
-                            random.randint((1/4)*values.LENGTH, (3/4)*values.LENGTH))
+            spawn_coord = (random.randint((1/4)*values.HEIGHT, (3/4)*values.HEIGHT),
+                           random.randint((1/4)*values.LENGTH, (3/4)*values.LENGTH))
 
             # Ensure there are no other powerups occupying the same spot
-            if board.at(spawn_coords) == '':
-                return spawn_coords
+            if board.at(spawn_coord) == '':
+                return spawn_coord
 
 
 class Snake(BaseItem):
@@ -25,8 +26,8 @@ class Snake(BaseItem):
         super(Snake, self).__init__()
 
 
-    def get_spawn(self, board):
-        spawn_coords = super(Snake, self).get_spawn(board)
+    def spawn(self, board):
+        spawn_coords = super(Snake, self).spawn(board)
         self.coords.append(spawn_coords)
         return spawn_coords
 
@@ -36,7 +37,7 @@ class Snake(BaseItem):
                              values.DIRECTION_DOWN: (1, 0),
                              values.DIRECTION_LEFT: (0, -1),
                              values.DIRECTION_RIGHT: (0, 1)}
-        return (self.coords[0][i] + extrapolation_map[direction][i] for i in range(2))
+        return list(self.coords[0][i] + extrapolation_map[direction][i] for i in range(2))
 
 
     def move(self, direction):
@@ -65,32 +66,32 @@ class Board(object):
             self.grid.append(row)
 
 
-    def at(self, coords):
-        return self.grid[coords[0]][coords[1]]
+    def at(self, coord):
+        return self.grid[coord[0]][coord[1]]
 
 
-    def within(self, coords):
-        return coords[0] < 0 or coords[0] >= values.HEIGHT \
-            or coords[1] < 0 or coords[1] >= values.LENGTH
+    def within(self, coord):
+        return coord[0] < 0 or coord[0] >= values.HEIGHT \
+            or coord[1] < 0 or coord[1] >= values.LENGTH
 
 
     def draw(self):
         for index, row in enumerate(self.grid):
-            self.screen.addstr(values.CORNERS['top_left'][0]+index, values.CORNERS['top_left'][1],
+            self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
                                ''.join(row))
 
 
     def apply(self, items):
-        def replace(item, coords):
-            self.grid[coords[0]][coords[1]] = item
+        def replace(item, coord):
+            self.grid[coord[0]][coord[1]] = item
 
-        item_map = {values.ITEM_FOOD: config['snake'],
-                    values.ITEM_SNAKE: config['food']}
+        item_map = {values.ITEM_FOOD: values.DISPLAY_FOOD,
+                    values.ITEM_SNAKE: values.DISPLAY_SNAKE}
 
         self.__clear()
-        for key, value in items.iteritems():
-            for i in value:
-                replace(item_map[key], i)
+        for key, coords in items.iteritems():
+            for coord in coords:
+                replace(item_map[key], coord)
 
 
     def __clear(self):
@@ -100,28 +101,70 @@ class Board(object):
 
 
 class Game(object):
-    current_direction = None
-
-
     def __init__(self, config, screen):
         self.config = config
         self.screen = screen
         self.board = None
+        self.snake = None
+        self.direction_map = {values.PLAYER_KEYS[0][0]: values.DIRECTION_UP,
+                              values.PLAYER_KEYS[0][1]: values.DIRECTION_DOWN,
+                              values.PLAYER_KEYS[0][2]: values.DIRECTION_LEFT,
+                              values.PLAYER_KEYS[0][3]: values.DIRECTION_RIGHT}
+        self.current_direction = random.randint(0, 3)
 
 
     def start(self):
+        self.draw_borders()
         self.board = Board(self.screen)
+
+        self.snake = Snake()
+        self.snake.spawn(self.board)
+
+        while True:
+            print "hi"
+            c = self.screen.getch()
+
+            if c == ord('q'):
+                return False
+            elif c == ord(values.PLAYER_KEYS[0][0]):
+                self.current_direction = values.DIRECTION_UP
+            elif c == ord(values.PLAYER_KEYS[0][1]):
+                self.current_direction = values.DIRECTION_DOWN
+            elif c == ord(values.PLAYER_KEYS[0][2]):
+                self.current_direction = values.DIRECTION_LEFT
+            elif c == ord(values.PLAYER_KEYS[0][3]):
+                self.current_direction = values.DIRECTION_RIGHT
+
+            if self.board.within(self.snake.extrapolate(self.current_direction)):
+                self.snake.move(self.current_direction)
+            else:
+                return False
+
+            self.board.apply({values.ITEM_SNAKE: self.snake.coords})
+            self.board.draw()
+            self.screen.refresh()
+            time.sleep(0.5)
 
 
     def draw_borders(self):
-        self.screen.addstr(values.CORNERS['top_left'][0]-1, values.CORNERS['top_left'][1],
-                           values.CORNERS['top']*values.LENGTH)
-        self.screen.addstr(values.CORNERS['bottom_left'][0], values.CORNERS['bottom_left'][1],
-                           values.CORNERS['bottom']*values.LENGTH)
+        # Draw sides
+        for i in range(values.CORNERS['TOP_LEFT'][1], values.CORNERS['TOP_RIGHT'][1]+1):
+            self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, i, values.BORDERS['TOP'])
+            self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0]+1, i, values.BORDERS['BOTTOM'])
 
-        for i in range(values.CORNERS['top_left'][0], values.CORNERS['bottom_left'][0]):
-            self.screen.addstr(i, values.CORNERS['top_left'][1]-1, values.CORNERS['left'])
-            self.screen.addstr(i, values.CORNERS['top_right'][1]+1, values.CORNERS['right'])
+        for i in range(values.CORNERS['TOP_LEFT'][0], values.CORNERS['BOTTOM_LEFT'][0]+1):
+            self.screen.addch(i, values.CORNERS['TOP_LEFT'][1]-1, values.BORDERS['LEFT'])
+            self.screen.addch(i, values.CORNERS['TOP_RIGHT'][1]+1, values.BORDERS['RIGHT'])
+
+        # Draw corners
+        self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, values.CORNERS['TOP_LEFT'][1]-1,
+                          values.BORDERS['TOP_LEFT'])
+        self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, values.CORNERS['TOP_RIGHT'][1]+1,
+                          values.BORDERS['TOP_RIGHT'])
+        self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0]+1, values.CORNERS['BOTTOM_LEFT'][1]-1,
+                          values.BORDERS['BOTTOM_LEFT'])
+        self.screen.addch(values.CORNERS['BOTTOM_RIGHT'][0]+1, values.CORNERS['BOTTOM_RIGHT'][1]+1,
+                          values.BORDERS['BOTTOM_RIGHT'])
 
 
 if __name__ == '__main__':
@@ -159,44 +202,46 @@ if __name__ == '__main__':
                     size_split = tuple(int(size.split('x')[i]) for i in range(2))
 
                     if any(size_split[i] > values.SCREEN_DIMENSIONS[i] for i in range(2)):
-                        terminate("Error: width and HEIGHT must not be greater than the " +
-                                  "maximum dimensions")
+                        terminate('Error: width and HEIGHT must not be greater than the ' +
+                                  'maximum dimensions')
 
                     if any(size_split[i] < 10 for i in range(2)):
-                        terminate("Error: width and HEIGHT must be both at least 10")
+                        terminate('Error: width and HEIGHT must be both at least 10')
 
                     if any(size_split[i]%2 != 0 for i in range(2)):
-                        terminate("Error: width and HEIGHT must be even numbers")
+                        terminate('Error: width and HEIGHT must be even numbers')
 
                     value.update({'size': size_split})
 
-            if 'borders' in line:
-                borders = get_config_value(line)
-                borders_split = tuple(borders.split(',')[i] for i in range(4))
-
-                if any(len(borders_split[i]) != 1 for i in range(4)):
-                    terminate("Error: each border must be only 1 character")
-
-                # Left, right, top, bottom
-                value.update({'borders': borders_split})
-
             if 'snake' in line:
-                snake_char = get_config_value(line)
+                display_snake = get_config_value(line)
 
-                if len(snake_char) != 1:
-                    terminate("Error: snake must be only 1 character")
+                if len(display_snake) != 1:
+                    terminate('Error: snake must be only 1 character')
 
-                value.update({'snake': snake_char})
+                value.update({'snake': display_snake})
 
             if 'food' in line:
-                food_char = get_config_value(line)
+                display_food = get_config_value(line)
 
-                if len(food_char) != 1:
-                    terminate("Error: food must be only 1 character")
+                if len(display_food) != 1:
+                    terminate('Error: food must be only 1 character')
 
-                value.update({'food': food_char})
+                value.update({'food': display_food})
+
+            if 'player1_keys' in line:
+                player1_keys = get_config_value(line)
+                player1_keys_split = tuple(player1_keys.split(',')[i] for i in range(4))
+
+                if any(len(player1_keys_split[i]) != 1 for i in range(4)):
+                    terminate('Error: movement keys must be only 1 character')
+
+                value.update({'player1_keys': player1_keys_split})
+
+            # TODO: Do the same for other players
 
         return value
+
 
     config = None
     config_file = None
@@ -205,7 +250,7 @@ if __name__ == '__main__':
         # the first argument to `python main.py`
         config_file = open(['slithery.conf' if len(sys.argv) == 1 else sys.argv[1]][0], 'rb')
     except IOError:
-        terminate("Error: configuration file does not exist in current directory")
+        terminate('Error: configuration file does not exist in current directory')
     else:
         config = parse(config_file)
 
@@ -215,19 +260,28 @@ if __name__ == '__main__':
         values.X_CENTER = values.SCREEN_DIMENSIONS[1]/2
         values.Y_CENTER = values.SCREEN_DIMENSIONS[0]/2
 
-        values.BORDERS = {'top': config['borders'][2],
-                          'bottom': config['borders'][3],
-                          'left': config['borders'][0],
-                          'right': config['borders'][1]}
+        values.BORDERS = {'TOP': curses.ACS_HLINE,
+                          'BOTTOM': curses.ACS_HLINE,
+                          'LEFT': curses.ACS_VLINE,
+                          'RIGHT': curses.ACS_VLINE,
+                          'TOP_LEFT': curses.ACS_ULCORNER,
+                          'TOP_RIGHT': curses.ACS_URCORNER,
+                          'BOTTOM_LEFT': curses.ACS_LLCORNER,
+                          'BOTTOM_RIGHT': curses.ACS_LRCORNER}
 
-        values.CORNERS = {'top_left': (values.Y_CENTER-values.HEIGHT/2+2,
+        values.CORNERS = {'TOP_LEFT': (values.Y_CENTER-values.HEIGHT/2+2,
                                        values.X_CENTER-values.LENGTH/2+1),
-                          'top_right': (values.Y_CENTER-values.HEIGHT/2+2,
-                                        values.X_CENTER-values.LENGTH/2),
-                          'bottom_left': (values.Y_CENTER+values.HEIGHT/2+2,
+                          'TOP_RIGHT': (values.Y_CENTER-values.HEIGHT/2+2,
+                                        values.X_CENTER+values.LENGTH/2),
+                          'BOTTOM_LEFT': (values.Y_CENTER+values.HEIGHT/2+2,
                                           values.X_CENTER-values.LENGTH/2+1),
-                          'bottom_right': (values.Y_CENTER+values.HEIGHT/2+2,
+                          'BOTTOM_RIGHT': (values.Y_CENTER+values.HEIGHT/2+2,
                                            values.X_CENTER+values.LENGTH/2)}
+
+        values.DISPLAY_SNAKE = config['snake']
+        values.DISPLAY_FOOD = config['food']
+
+        values.PLAYER_KEYS.append(config['player1_keys'])
 
 
     # Main game loop
@@ -236,4 +290,4 @@ if __name__ == '__main__':
         play_again = game.start()
 
         if not play_again:
-            break
+            terminate()

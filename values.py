@@ -18,3 +18,8 @@ Y_CENTER = None
 
 BORDERS = None
 CORNERS = None
+
+DISPLAY_SNAKE = None
+DISPLAY_FOOD = None
+
+PLAYER_KEYS = []
