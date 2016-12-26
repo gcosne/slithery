@@ -20,6 +20,16 @@ class BaseItem(object):
                 return spawn_coord
 
 
+    def on_touch(self, game):
+        # To be implemented by child classes
+        pass
+
+
+class Food(BaseItem):
+    def on_touch(self, game):
+        game.score += 1
+
+
 class Snake(BaseItem):
     coords = []
 
@@ -74,6 +84,11 @@ class Board(object):
                 row.append(values.ITEM_EMPTY)
             self.grid.append(row)
 
+    def __clear(self):
+        for i in range(values.HEIGHT):
+            for j in range(values.LENGTH):
+                self.grid[i][j] = values.ITEM_EMPTY
+
 
     def at(self, coord):
         return self.grid[coord[0]][coord[1]]
@@ -104,12 +119,6 @@ class Board(object):
                 replace(key, coord)
 
 
-    def __clear(self):
-        for i in range(values.HEIGHT):
-            for j in range(values.LENGTH):
-                self.grid[i][j] = values.ITEM_EMPTY
-
-
 class Game(object):
     def __init__(self, config, screen):
         self.config = config
@@ -121,6 +130,7 @@ class Game(object):
                               ord(values.PLAYER_KEYS[0][2]): values.DIRECTION_LEFT,
                               ord(values.PLAYER_KEYS[0][3]): values.DIRECTION_RIGHT}
         self.current_direction = random.randint(0, 3)
+        self.score = 0
 
 
     def start(self):
