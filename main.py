@@ -116,10 +116,10 @@ class Game(object):
         self.screen = screen
         self.board = None
         self.snake = None
-        self.direction_map = {values.PLAYER_KEYS[0][0]: values.DIRECTION_UP,
-                              values.PLAYER_KEYS[0][1]: values.DIRECTION_DOWN,
-                              values.PLAYER_KEYS[0][2]: values.DIRECTION_LEFT,
-                              values.PLAYER_KEYS[0][3]: values.DIRECTION_RIGHT}
+        self.direction_map = {ord(values.PLAYER_KEYS[0][0]): values.DIRECTION_UP,
+                              ord(values.PLAYER_KEYS[0][1]): values.DIRECTION_DOWN,
+                              ord(values.PLAYER_KEYS[0][2]): values.DIRECTION_LEFT,
+                              ord(values.PLAYER_KEYS[0][3]): values.DIRECTION_RIGHT}
         self.current_direction = random.randint(0, 3)
 
 
@@ -128,37 +128,27 @@ class Game(object):
         self.board = Board(self.screen)
 
         self.snake = Snake()
-        self.board.apply({values.ITEM_SNAKE: [self.snake.spawn(self.board)]})
-        self.board.draw()
-        self.screen.refresh()
+        self.snake.spawn()
 
         while True:
-            self.screen.getch()
-            break
-            '''
-            c = self.screen.getch()
+            self.board.apply({values.ITEM_SNAKE: self.snake.coords})
+            self.board.draw()
+            self.screen.refresh()
 
+            c = self.screen.getch()
             if c == ord('q'):
                 return False
-            elif c == ord(values.PLAYER_KEYS[0][0]):
-                self.current_direction = values.DIRECTION_UP
-            elif c == ord(values.PLAYER_KEYS[0][1]):
-                self.current_direction = values.DIRECTION_DOWN
-            elif c == ord(values.PLAYER_KEYS[0][2]):
-                self.current_direction = values.DIRECTION_LEFT
-            elif c == ord(values.PLAYER_KEYS[0][3]):
-                self.current_direction = values.DIRECTION_RIGHT
+            elif c in self.direction_map.keys():
+                self.current_direction = self.direction_map[c]
 
             if self.board.within(self.snake.extrapolate(self.current_direction)):
                 self.snake.move(self.current_direction)
             else:
-                return False
+                continue
+                #return False
 
-            self.board.apply({values.ITEM_SNAKE: self.snake.coords})
-            self.board.draw()
-            self.screen.refresh()
             time.sleep(0.5)
-            '''
+
 
     def draw_borders(self):
         # Draw sides
