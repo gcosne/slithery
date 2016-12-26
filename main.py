@@ -1,9 +1,11 @@
 #!/usr/bin/python
+#pylint: skip-file
 import random
 import curses
 import sys
 import math
 import time
+import logging
 
 import values
 
@@ -84,6 +86,7 @@ class Board(object):
                 row.append(values.ITEM_EMPTY)
             self.grid.append(row)
 
+
     def __clear(self):
         for i in range(values.HEIGHT):
             for j in range(values.LENGTH):
@@ -95,8 +98,8 @@ class Board(object):
 
 
     def within(self, coord):
-        return coord[0] < 0 or coord[0] >= values.HEIGHT \
-            or coord[1] < 0 or coord[1] >= values.LENGTH
+        return coord[0] >= 0 and coord[0] < values.HEIGHT \
+            and coord[1] >= 0 and coord[1] < values.LENGTH
 
 
     def draw(self):
@@ -106,7 +109,7 @@ class Board(object):
 
         for index, row in enumerate(self.grid):
             self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
-                               ' '.join(list([item_map[item] for item in row])))
+                               ''.join(list([item_map[item] for item in row])))
 
 
     def apply(self, items):
@@ -138,32 +141,35 @@ class Game(object):
         self.board = Board(self.screen)
 
         self.snake = Snake()
-        self.snake.spawn()
+        self.snake.spawn(self.board)
 
         while True:
             self.board.apply({values.ITEM_SNAKE: self.snake.coords})
+            logging.debug('snakecoords: ' + ', '.join(str(e) for e in self.snake.coords))
             self.board.draw()
             self.screen.refresh()
 
             c = self.screen.getch()
+            
+            time.sleep(0.5)
             if c == ord('q'):
                 return False
             elif c in self.direction_map.keys():
                 self.current_direction = self.direction_map[c]
-            
-            if self.board.within(self.snake.extrapolate(self.current_direction)):
+
+            extrapolate = self.snake.extrapolate(self.current_direction)
+            logging.debug('extrapolate: ' + ', '.join(str(e) for e in extrapolate))
+            if self.board.within(extrapolate):
                 self.snake.move(self.current_direction)
             else:
                 return False
-
-            time.sleep(0.5)
 
 
     def draw_borders(self):
         # Draw sides
         for i in range(values.CORNERS['TOP_LEFT'][1], values.CORNERS['TOP_RIGHT'][1]+1):
             self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, i, values.BORDERS['TOP'])
-            self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0]+1, i, values.BORDERS['BOTTOM'])
+            self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0], i, values.BORDERS['BOTTOM'])
 
         for i in range(values.CORNERS['TOP_LEFT'][0], values.CORNERS['BOTTOM_LEFT'][0]+1):
             self.screen.addch(i, values.CORNERS['TOP_LEFT'][1]-1, values.BORDERS['LEFT'])
@@ -174,9 +180,9 @@ class Game(object):
                           values.BORDERS['TOP_LEFT'])
         self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, values.CORNERS['TOP_RIGHT'][1]+1,
                           values.BORDERS['TOP_RIGHT'])
-        self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0]+1, values.CORNERS['BOTTOM_LEFT'][1]-1,
+        self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0], values.CORNERS['BOTTOM_LEFT'][1]-1,
                           values.BORDERS['BOTTOM_LEFT'])
-        self.screen.addch(values.CORNERS['BOTTOM_RIGHT'][0]+1, values.CORNERS['BOTTOM_RIGHT'][1]+1,
+        self.screen.addch(values.CORNERS['BOTTOM_RIGHT'][0], values.CORNERS['BOTTOM_RIGHT'][1]+1,
                           values.BORDERS['BOTTOM_RIGHT'])
 
 
@@ -184,6 +190,7 @@ if __name__ == '__main__':
     screen = curses.initscr()
     curses.curs_set(0)
     curses.noecho()
+    screen.nodelay(1)
     values.SCREEN_DIMENSIONS = screen.getmaxyx()
 
 
@@ -253,6 +260,15 @@ if __name__ == '__main__':
 
             # TODO: Do the same for other players
 
+            if 'quit_key' in line:
+                quit_key = get_config_value(line)
+
+                if len(quit_key) != 1:
+                    terminate('Error: quit key must be only 1 character')
+
+                value.update({'quit_key': quit_key})
+
+
         return value
 
 
@@ -295,7 +311,9 @@ if __name__ == '__main__':
         values.DISPLAY_FOOD = config['food']
 
         values.PLAYER_KEYS.append(config['player1_keys'])
+        values.QUIT_KEY = config['quit_key']
 
+        logging.basicConfig(filename='slithery.log', level=logging.DEBUG)
 
     # Main game loop
     while True:

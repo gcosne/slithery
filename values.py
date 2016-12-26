@@ -9,7 +9,7 @@ DIRECTION_DOWN = 1
 DIRECTION_LEFT = 2
 DIRECTION_RIGHT = 3
 
-DISPLAY_EMPTY = ''
+DISPLAY_EMPTY = '.'
 
 # To be initialized at runtime
 SCREEN_DIMENSIONS = None
