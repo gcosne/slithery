@@ -86,12 +86,6 @@ class Board(object):
             self.grid.append(row)
 
 
-    def __clear(self):
-        for i in range(values.HEIGHT):
-            for j in range(values.LENGTH):
-                self.grid[i][j] = values.ITEM_EMPTY
-
-
     def at(self, coord):
         return self.grid[coord[0]][coord[1]]
 
@@ -115,15 +109,21 @@ class Board(object):
         def replace(item, coord):
             self.grid[coord[0]][coord[1]] = item
 
-        self.__clear()
+
+        def clear():
+            for i in range(values.HEIGHT):
+                for j in range(values.LENGTH):
+                    self.grid[i][j] = values.ITEM_EMPTY
+
+
+        clear()
         for key, coords in items.iteritems():
             for coord in coords:
                 replace(key, coord)
 
 
 class Game(object):
-    def __init__(self, config, screen):
-        self.config = config
+    def __init__(self, screen):
         self.screen = screen
         self.board = None
         self.snake = None
@@ -325,7 +325,7 @@ if __name__ == '__main__':
 
     # Main game loop
     while True:
-        game = Game(config, screen)
+        game = Game(screen)
         play_again = game.start()
 
         if not play_again:
