@@ -49,7 +49,6 @@ class Snake(BaseItem):
                 and spawn_coord[1] in range(int((1.0/4.0)*values.LENGTH),
                                             int(math.ceil((3.0/4.0)*values.LENGTH))+1):
                 self.coords.append(spawn_coord)
-                logging.debug(', '.join(str(e) for e in self.coords))
                 break
 
 
@@ -138,8 +137,8 @@ class Game(object):
 
     def start(self):
         self.draw_borders()
-        self.board = Board(self.screen)
 
+        self.board = Board(self.screen)
         self.snake = Snake()
         self.snake.spawn(self.board)
 
@@ -164,22 +163,23 @@ class Game(object):
 
     def draw_borders(self):
         # Draw sides
-        for i in range(values.CORNERS['TOP_LEFT'][1], values.CORNERS['TOP_RIGHT'][1]+1):
-            self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, i, values.BORDERS['TOP'])
-            self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0], i, values.BORDERS['BOTTOM'])
+        for i in range(values.BOARD_EDGES['MIN_X']-1, values.BOARD_EDGES['MAX_X']):
+            self.screen.addch(values.BOARD_EDGES['MIN_Y']-1, i, values.BORDERS['TOP'])
+            self.screen.addch(values.BOARD_EDGES['MAX_Y'], i, values.BORDERS['BOTTOM'])
 
-        for i in range(values.CORNERS['TOP_LEFT'][0], values.CORNERS['BOTTOM_LEFT'][0]+1):
-            self.screen.addch(i, values.CORNERS['TOP_LEFT'][1]-1, values.BORDERS['LEFT'])
-            self.screen.addch(i, values.CORNERS['TOP_RIGHT'][1]+1, values.BORDERS['RIGHT'])
+        for i in range(values.BOARD_EDGES['MIN_Y']-1, values.BOARD_EDGES['MAX_Y']):
+            self.screen.addch(i, values.BOARD_EDGES['MIN_X']-1, values.BORDERS['LEFT'])
+            self.screen.addch(i, values.BOARD_EDGES['MAX_X'], values.BORDERS['RIGHT'])
 
         # Draw corners
-        self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, values.CORNERS['TOP_LEFT'][1]-1,
+        self.screen.addch(values.BOARD_EDGES['MIN_Y']-1, values.BOARD_EDGES['MIN_X']-1,
                           values.BORDERS['TOP_LEFT'])
-        self.screen.addch(values.CORNERS['TOP_LEFT'][0]-1, values.CORNERS['TOP_RIGHT'][1]+1,
+        self.screen.addch(values.BOARD_EDGES['MIN_Y']-1, values.BOARD_EDGES['MAX_X'],
                           values.BORDERS['TOP_RIGHT'])
-        self.screen.addch(values.CORNERS['BOTTOM_LEFT'][0], values.CORNERS['BOTTOM_LEFT'][1]-1,
+        self.screen.addch(values.BOARD_EDGES['MAX_Y'], values.BOARD_EDGES['MIN_X']-1,
                           values.BORDERS['BOTTOM_LEFT'])
-        self.screen.addch(values.CORNERS['BOTTOM_RIGHT'][0], values.CORNERS['BOTTOM_RIGHT'][1]+1,
+        self.screen.move(0, 0)
+        self.screen.addch(values.BOARD_EDGES['MAX_Y'], values.BOARD_EDGES['MAX_X'],
                           values.BORDERS['BOTTOM_RIGHT'])
 
 
@@ -189,7 +189,7 @@ if __name__ == '__main__':
     curses.noecho()
     screen.nodelay(1)
     values.SCREEN_DIMENSIONS = screen.getmaxyx()
-
+    screen.move(0, 0)
 
     def terminate(*args):
         curses.endwin()
@@ -209,16 +209,16 @@ if __name__ == '__main__':
         for line in filename:
             line = line.strip('\n')
 
-            if 'size' in line:
+            if 'boardsize' in line:
                 size = get_config_value(line)
 
-                if size == 'FULLSCREEN':
-                    values.HEIGHT = values.SCREEN_DIMENSIONS[0]
-                    values.LENGTH = values.SCREEN_DIMENSIONS[1]
+                if size == 'MAX':
+                    values.HEIGHT = values.SCREEN_DIMENSIONS[0]-4
+                    values.LENGTH = values.SCREEN_DIMENSIONS[1]-4
                 else:
                     size_split = tuple(int(size.split('x')[i]) for i in range(2))
 
-                    if any(size_split[i] > values.SCREEN_DIMENSIONS[i] for i in range(2)):
+                    if any(size_split[i]+2 >= values.SCREEN_DIMENSIONS[i] for i in range(2)):
                         terminate('Error: width and height must not be greater than the ' +
                                   'maximum dimensions')
 
@@ -231,7 +231,7 @@ if __name__ == '__main__':
                     values.LENGTH = size_split[0]
                     values.HEIGHT = size_split[1]
 
-            if 'snake' in line:
+            if 'displaysnake' in line:
                 display_snake = get_config_value(line)
 
                 if len(display_snake) != 1:
@@ -239,7 +239,7 @@ if __name__ == '__main__':
 
                 values.DISPLAY_SNAKE = display_snake
 
-            if 'food' in line:
+            if 'displayfood' in line:
                 display_food = get_config_value(line)
 
                 if len(display_food) != 1:
@@ -247,7 +247,7 @@ if __name__ == '__main__':
 
                 values.DISPLAY_FOOD = display_food
 
-            if 'empty' in line:
+            if 'displayempty' in line:
                 display_empty = get_config_value(line)
 
                 if display_empty == 'SPACE':
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 
                     values.DISPLAY_EMPTY = display_empty
 
-            if 'iteration_delay' in line:
+            if 'iterdelay' in line:
                 iteration_delay_str = get_config_value(line)
                 iteration_delay_float = float(iteration_delay_str)
 
@@ -267,7 +267,7 @@ if __name__ == '__main__':
 
                 values.ITERATION_DELAY = iteration_delay_float
 
-            if 'player1_keys' in line:
+            if 'player1keys' in line:
                 player1_keys = get_config_value(line)
                 player1_keys_split = tuple(player1_keys.split(',')[i] for i in range(4))
 
@@ -277,7 +277,7 @@ if __name__ == '__main__':
                 values.PLAYER_KEYS = []
                 values.PLAYER_KEYS.append(player1_keys_split)
 
-            if 'quit_key' in line:
+            if 'quitkey' in line:
                 quit_key = get_config_value(line)
 
                 if len(quit_key) != 1:
@@ -309,14 +309,17 @@ if __name__ == '__main__':
                           'BOTTOM_LEFT': curses.ACS_LLCORNER,
                           'BOTTOM_RIGHT': curses.ACS_LRCORNER}
 
-        values.CORNERS = {'TOP_LEFT': (values.SCREEN_Y_CENTER-values.HEIGHT/2+2,
-                                       values.SCREEN_X_CENTER-values.LENGTH/2+1),
-                          'TOP_RIGHT': (values.SCREEN_Y_CENTER-values.HEIGHT/2+2,
-                                        values.SCREEN_X_CENTER+values.LENGTH/2),
-                          'BOTTOM_LEFT': (values.SCREEN_Y_CENTER+values.HEIGHT/2+2,
-                                          values.SCREEN_X_CENTER-values.LENGTH/2+1),
-                          'BOTTOM_RIGHT': (values.SCREEN_Y_CENTER+values.HEIGHT/2+2,
-                                           values.SCREEN_X_CENTER+values.LENGTH/2)}
+        values.BOARD_EDGES = {'MIN_Y': (values.SCREEN_DIMENSIONS[0]-values.HEIGHT)/2,
+                              'MAX_Y': values.SCREEN_DIMENSIONS[0]
+                                       -(values.SCREEN_DIMENSIONS[0]-values.HEIGHT)/2,
+                              'MIN_X': (values.SCREEN_DIMENSIONS[1]-values.LENGTH)/2,
+                              'MAX_X': values.SCREEN_DIMENSIONS[1]
+                                       -(values.SCREEN_DIMENSIONS[1]-values.LENGTH)/2}
+
+        values.CORNERS = {'TOP_LEFT': (values.BOARD_EDGES['MIN_Y'], values.BOARD_EDGES['MIN_X']),
+                          'TOP_RIGHT': (values.BOARD_EDGES['MIN_Y'], values.BOARD_EDGES['MAX_X']),
+                          'BOTTOM_LEFT': (values.BOARD_EDGES['MAX_Y'], values.BOARD_EDGES['MIN_X']),
+                          'BOTTOM_RIGHT': (values.BOARD_EDGES['MAX_Y'], values.BOARD_EDGES['MAX_X'])}
 
         logging.basicConfig(filename='slithery.log', level=logging.DEBUG)
 

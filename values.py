@@ -17,6 +17,7 @@ HEIGHT = None
 X_CENTER = None
 Y_CENTER = None
 
+BOARD_EDGES = None
 BORDERS = None
 CORNERS = None
 
