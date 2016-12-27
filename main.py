@@ -1,5 +1,4 @@
 #!/usr/bin/python
-#pylint: skip-file
 import random
 import curses
 import sys
@@ -22,7 +21,7 @@ class BaseItem(object):
                 return spawn_coord
 
 
-    def on_touch(self):
+    def on_touch(self, game):
         # To be implemented by child classes
         pass
 
@@ -47,10 +46,11 @@ class Snake(BaseItem):
             # math.ceil is used to better approximate the upper limit of x and y
             if spawn_coord[0] in range(int((1.0/4.0)*values.HEIGHT),
                                        int(math.ceil((3.0/4.0)*values.HEIGHT))+1) \
-               and spawn_coord[1] in range(int((1.0/4.0)*values.LENGTH),
-                                           int(math.ceil((3.0/4.0)*values.LENGTH))+1):
+                and spawn_coord[1] in range(int((1.0/4.0)*values.LENGTH),
+                                            int(math.ceil((3.0/4.0)*values.LENGTH))+1):
                 self.coords.append(spawn_coord)
-                return spawn_coord
+                logging.debug(', '.join(str(e) for e in self.coords))
+                break
 
 
     def extrapolate(self, direction):
@@ -99,7 +99,7 @@ class Board(object):
 
     def within(self, coord):
         return coord[0] >= 0 and coord[0] < values.HEIGHT \
-            and coord[1] >= 0 and coord[1] < values.LENGTH
+           and coord[1] >= 0 and coord[1] < values.LENGTH
 
 
     def draw(self):
@@ -149,7 +149,7 @@ class Game(object):
             self.screen.refresh()
 
             c = self.screen.getch()
-            
+
             time.sleep(values.ITERATION_DELAY)
             if c == ord('q'):
                 return False
@@ -202,11 +202,10 @@ if __name__ == '__main__':
         sys.exit()
 
 
-    def parse(filename):
+    def populate_values(filename):
         def get_config_value(arg):
             return arg.split('=', 1)[1]
 
-        value = {}
         for line in filename:
             line = line.strip('\n')
 
@@ -214,21 +213,23 @@ if __name__ == '__main__':
                 size = get_config_value(line)
 
                 if size == 'FULLSCREEN':
-                    value.update({'size': values.SCREEN_DIMENSIONS})
+                    values.HEIGHT = values.SCREEN_DIMENSIONS[0]
+                    values.LENGTH = values.SCREEN_DIMENSIONS[1]
                 else:
                     size_split = tuple(int(size.split('x')[i]) for i in range(2))
 
                     if any(size_split[i] > values.SCREEN_DIMENSIONS[i] for i in range(2)):
-                        terminate('Error: width and HEIGHT must not be greater than the ' +
+                        terminate('Error: width and height must not be greater than the ' +
                                   'maximum dimensions')
 
-                    if any(size_split[i] < 10 for i in range(2)):
-                        terminate('Error: width and HEIGHT must be both at least 10')
+                        if any(size_split[i] < 10 for i in range(2)):
+                            terminate('Error: width and height must be both at least 10')
 
                     if any(size_split[i]%2 != 0 for i in range(2)):
-                        terminate('Error: width and HEIGHT must be even numbers')
+                        terminate('Error: width and height must be even numbers')
 
-                    value.update({'size': size_split})
+                    values.LENGTH = size_split[0]
+                    values.HEIGHT = size_split[1]
 
             if 'snake' in line:
                 display_snake = get_config_value(line)
@@ -236,7 +237,7 @@ if __name__ == '__main__':
                 if len(display_snake) != 1:
                     terminate('Error: snake must be only 1 character')
 
-                value.update({'snake': display_snake})
+                values.DISPLAY_SNAKE = display_snake
 
             if 'food' in line:
                 display_food = get_config_value(line)
@@ -244,18 +245,18 @@ if __name__ == '__main__':
                 if len(display_food) != 1:
                     terminate('Error: food must be only 1 character')
 
-                value.update({'food': display_food})
+                values.DISPLAY_FOOD = display_food
 
             if 'empty' in line:
                 display_empty = get_config_value(line)
 
                 if display_empty == 'SPACE':
-                    value.update({'empty': ' '})
+                    values.DISPLAY_EMPTY = ' '
                 else:
                     if len(display_empty) != 1:
                         terminate('Error: empty item must be only 1 character')
 
-                    value.update({'empty': display_empty})
+                    values.DISPLAY_EMPTY = display_empty
 
             if 'iteration_delay' in line:
                 iteration_delay_str = get_config_value(line)
@@ -264,7 +265,7 @@ if __name__ == '__main__':
                 if iteration_delay_float < 0.1 or iteration_delay_float > 2:
                     terminate('Error: iteration delay must be between 0.1 and 2 seconds')
 
-                value.update({'iteration_delay': iteration_delay_float})
+                values.ITERATION_DELAY = iteration_delay_float
 
             if 'player1_keys' in line:
                 player1_keys = get_config_value(line)
@@ -273,9 +274,8 @@ if __name__ == '__main__':
                 if any(len(player1_keys_split[i]) != 1 for i in range(4)):
                     terminate('Error: movement keys must be only 1 character')
 
-                value.update({'player1_keys': player1_keys_split})
-
-            # TODO: Do the same for other players
+                values.PLAYER_KEYS = []
+                values.PLAYER_KEYS.append(player1_keys_split)
 
             if 'quit_key' in line:
                 quit_key = get_config_value(line)
@@ -283,10 +283,7 @@ if __name__ == '__main__':
                 if len(quit_key) != 1:
                     terminate('Error: quit key must be only 1 character')
 
-                value.update({'quit_key': quit_key})
-
-
-        return value
+                values.QUIT_KEY = quit_key
 
 
     config = None
@@ -298,13 +295,10 @@ if __name__ == '__main__':
     except IOError:
         terminate('Error: configuration file does not exist in current directory')
     else:
-        config = parse(config_file)
+        populate_values(config_file)
 
-        # curses coordinates are in the format (y, x)
-        values.LENGTH = config['size'][1]
-        values.HEIGHT = config['size'][0]
-        values.X_CENTER = values.SCREEN_DIMENSIONS[1]/2
-        values.Y_CENTER = values.SCREEN_DIMENSIONS[0]/2
+        values.SCREEN_X_CENTER = values.SCREEN_DIMENSIONS[1]/2
+        values.SCREEN_Y_CENTER = values.SCREEN_DIMENSIONS[0]/2
 
         values.BORDERS = {'TOP': curses.ACS_HLINE,
                           'BOTTOM': curses.ACS_HLINE,
@@ -315,23 +309,14 @@ if __name__ == '__main__':
                           'BOTTOM_LEFT': curses.ACS_LLCORNER,
                           'BOTTOM_RIGHT': curses.ACS_LRCORNER}
 
-        values.CORNERS = {'TOP_LEFT': (values.Y_CENTER-values.HEIGHT/2+2,
-                                       values.X_CENTER-values.LENGTH/2+1),
-                          'TOP_RIGHT': (values.Y_CENTER-values.HEIGHT/2+2,
-                                        values.X_CENTER+values.LENGTH/2),
-                          'BOTTOM_LEFT': (values.Y_CENTER+values.HEIGHT/2+2,
-                                          values.X_CENTER-values.LENGTH/2+1),
-                          'BOTTOM_RIGHT': (values.Y_CENTER+values.HEIGHT/2+2,
-                                           values.X_CENTER+values.LENGTH/2)}
-
-        values.DISPLAY_SNAKE = config['snake']
-        values.DISPLAY_FOOD = config['food']
-        values.DISPLAY_EMPTY = config['empty']
-
-        values.ITERATION_DELAY = config['iteration_delay']
-
-        values.PLAYER_KEYS.append(config['player1_keys'])
-        values.QUIT_KEY = config['quit_key']
+        values.CORNERS = {'TOP_LEFT': (values.SCREEN_Y_CENTER-values.HEIGHT/2+2,
+                                       values.SCREEN_X_CENTER-values.LENGTH/2+1),
+                          'TOP_RIGHT': (values.SCREEN_Y_CENTER-values.HEIGHT/2+2,
+                                        values.SCREEN_X_CENTER+values.LENGTH/2),
+                          'BOTTOM_LEFT': (values.SCREEN_Y_CENTER+values.HEIGHT/2+2,
+                                          values.SCREEN_X_CENTER-values.LENGTH/2+1),
+                          'BOTTOM_RIGHT': (values.SCREEN_Y_CENTER+values.HEIGHT/2+2,
+                                           values.SCREEN_X_CENTER+values.LENGTH/2)}
 
         logging.basicConfig(filename='slithery.log', level=logging.DEBUG)
 
