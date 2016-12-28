@@ -267,8 +267,8 @@ if __name__ == '__main__':
                 iteration_delay_str = get_config_value(line)
                 iteration_delay_float = float(iteration_delay_str)
 
-                if iteration_delay_float < 0.1 or iteration_delay_float > 2:
-                    terminate('Error: iteration delay must be between 0.1 and 2 seconds')
+                if iteration_delay_float < 0.025 or iteration_delay_float > 2:
+                    terminate('Error: iteration delay must be between 0.025 and 2 seconds')
 
                 values.ITERATION_DELAY = iteration_delay_float
 
