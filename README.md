@@ -29,7 +29,7 @@ For all items, `char` must be exactly 1 character long.
 ### iterdelay
 Sets the delay between each iteration of the game. In other words, the shorter the delay, the faster the snake moves.
 
-- `iterdelay=<delay>`, `delay` should be a floating point number and it should be between 0.1 and 2 seconds
+- `iterdelay=<delay>`, `delay` should be a floating point number and it should be between 0.025 and 2 seconds
 
 ### quitkey
 Sets the key which when pressed quits the game
