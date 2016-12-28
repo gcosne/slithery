@@ -17,7 +17,7 @@ class BaseItem(object):
                            random.randint(0, values.LENGTH-1))
 
             # Ensure there are no other powerups occupying the same spot
-            if board.at(spawn_coord) == values.ITEM_EMPTY:
+            if board.at(spawn_coord) == None:
                 return spawn_coord
 
 
@@ -29,6 +29,7 @@ class BaseItem(object):
 class Food(BaseItem):
     def on_touch(self, game):
         game.score += 1
+        game.snake.move(game.current_direction)
 
 
 class Snake(BaseItem):
@@ -82,7 +83,7 @@ class Board(object):
         for i in range(values.HEIGHT):
             row = []
             for j in range(values.LENGTH):
-                row.append(values.ITEM_EMPTY)
+                row.append(None)
             self.grid.append(row)
 
 
@@ -96,13 +97,13 @@ class Board(object):
 
 
     def draw(self):
-        item_map = {values.ITEM_FOOD: values.DISPLAY_FOOD,
-                    values.ITEM_SNAKE: values.DISPLAY_SNAKE,
-                    values.ITEM_EMPTY: values.DISPLAY_EMPTY}
+        display_map = {Food: values.DISPLAY_FOOD,
+                    Snake: values.DISPLAY_SNAKE,
+                    None: values.DISPLAY_EMPTY}
 
         for index, row in enumerate(self.grid):
             self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
-                               ''.join(list([item_map[item] for item in row])))
+                               ''.join(list([display_map[item] for item in row])))
 
 
     def apply(self, items):
@@ -113,7 +114,7 @@ class Board(object):
         def clear():
             for i in range(values.HEIGHT):
                 for j in range(values.LENGTH):
-                    self.grid[i][j] = values.ITEM_EMPTY
+                    self.grid[i][j] = None
 
 
         clear()
@@ -143,7 +144,7 @@ class Game(object):
         self.snake.spawn(self.board)
 
         while True:
-            self.board.apply({values.ITEM_SNAKE: self.snake.coords})
+            self.board.apply({Snake: self.snake.coords})
             self.board.draw()
             self.screen.refresh()
 
@@ -155,8 +156,12 @@ class Game(object):
             elif c in self.direction_map.keys():
                 self.current_direction = self.direction_map[c]
 
-            if self.board.within(self.snake.extrapolate(self.current_direction)):
+            extrapolate = self.snake.extrapolate(self.current_direction)
+            if self.board.within(extrapolate):
                 self.snake.move(self.current_direction)
+
+                if isinstance(self.board.at(extrapolate), BaseItem):
+                    pass
             else:
                 return False
 
