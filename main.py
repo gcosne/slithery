@@ -33,7 +33,7 @@ class Food(BaseItem):
     def on_touch(self, game):
         game.score += 1
         game.snake.grow(game.current_direction)
-
+        game.screen.addstr(0, 0, 'Score: {}'.format(game.score))
 
 class Snake(BaseItem):
     coords = []
@@ -176,8 +176,9 @@ class Game(object):
                     for i in self.items:
                         if isinstance(i, item.__class__) and i.coord == item.coord:
                             self.items.remove(i)
-                            self.items.append(Food().spawn(self.board))
-                            self.screen.addstr(0, 0, 'Score: {}'.format(self.score))
+
+                            if isinstance(i, Food):
+                                self.items.append(Food().spawn(self.board))
             else:
                 return False
 
