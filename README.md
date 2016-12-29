@@ -5,7 +5,7 @@ Python 2 needs to be installed. (preferably 2.7 but other versions should work f
 
 - First clone the repo: `git clone https://github.com/greysome/slithery`
 - Then `cd` into slithery and run the script with default configuration: `python main.py`
-
+- Have fun! Use the default i,k,j and l keys to move.
 
 ## Configuration
 There is an editable configuration file, `slithery.conf`, which stores the default settings. 
