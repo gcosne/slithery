@@ -1,5 +1,4 @@
 #!/usr/bin/python
-#pylint: skip-file
 import random
 import curses
 import sys
@@ -143,6 +142,7 @@ class Game(object):
 
     def start(self):
         self.draw_borders()
+        self.screen.addstr(0, 0, 'Score: 0')
 
         self.board = Board(self.screen)
         self.snake = Snake()
@@ -165,7 +165,8 @@ class Game(object):
                 self.current_direction = self.direction_map[c]
 
             extrapolate = self.snake.extrapolate(self.current_direction)
-            if self.board.within(extrapolate):
+            logging.debug(self.board.at(extrapolate).__class__)
+            if self.board.within(extrapolate) and not isinstance(self.board.at(extrapolate), Snake):
                 self.snake.move(self.current_direction)
 
                 item = self.board.at(extrapolate)
@@ -177,6 +178,7 @@ class Game(object):
                         if isinstance(i, item.__class__) and i.coord == item.coord:
                             self.items.remove(i)
                             self.items.append(Food().spawn(self.board))
+                            self.screen.addstr(0, 0, 'Score: {}'.format(self.score))
             else:
                 return False
 
