@@ -165,7 +165,6 @@ class Game(object):
                 self.current_direction = self.direction_map[c]
 
             extrapolate = self.snake.extrapolate(self.current_direction)
-            logging.debug(self.board.at(extrapolate).__class__)
             if self.board.within(extrapolate) and not isinstance(self.board.at(extrapolate), Snake):
                 self.snake.move(self.current_direction)
 
