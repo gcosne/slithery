@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#pylint: skip-file
 import random
 import curses
 import sys
@@ -10,15 +11,18 @@ import values
 
 
 class BaseItem(object):
+    coord = None
+
     def spawn(self, board):
         while True:
             # Spawn at least a quarter into the board
             spawn_coord = (random.randint(0, values.HEIGHT-1),
                            random.randint(0, values.LENGTH-1))
 
-            # Ensure there are no other powerups occupying the same spot
-            if board.at(spawn_coord) == None:
-                return spawn_coord
+            # Ensure there are no other items occupying the same spot
+            if board.at(spawn_coord) is None:
+                self.coord = spawn_coord
+                return self
 
 
     def on_touch(self, game):
@@ -29,7 +33,7 @@ class BaseItem(object):
 class Food(BaseItem):
     def on_touch(self, game):
         game.score += 1
-        game.snake.move(game.current_direction)
+        game.snake.grow(game.current_direction)
 
 
 class Snake(BaseItem):
@@ -41,7 +45,7 @@ class Snake(BaseItem):
 
     def spawn(self, board):
         while True:
-            spawn_coord = super(Snake, self).spawn(board)
+            spawn_coord = super(Snake, self).spawn(board).coord
 
             # A .0 is added at the back to prevent floating point truncation
             # math.ceil is used to better approximate the upper limit of x and y
@@ -98,29 +102,29 @@ class Board(object):
 
     def draw(self):
         display_map = {Food: values.DISPLAY_FOOD,
-                    Snake: values.DISPLAY_SNAKE,
-                    None: values.DISPLAY_EMPTY}
+                       Snake: values.DISPLAY_SNAKE,
+                       type(None): values.DISPLAY_EMPTY}
 
         for index, row in enumerate(self.grid):
             self.screen.addstr(values.CORNERS['TOP_LEFT'][0]+index, values.CORNERS['TOP_LEFT'][1],
-                               ''.join(list([display_map[item] for item in row])))
+                               ''.join(list([display_map[item.__class__] for item in row])))
 
 
     def apply(self, items):
         def replace(item, coord):
             self.grid[coord[0]][coord[1]] = item
 
+        for i in range(values.HEIGHT):
+            for j in range(values.LENGTH):
+                self.grid[i][j] = None
 
-        def clear():
-            for i in range(values.HEIGHT):
-                for j in range(values.LENGTH):
-                    self.grid[i][j] = None
-
-
-        clear()
-        for key, coords in items.iteritems():
-            for coord in coords:
-                replace(key, coord)
+        for item in items:
+            # Snake object stores multiple coordinates
+            if isinstance(item, Snake):
+                for i in item.coords:
+                    replace(item, i)
+            else:
+                replace(item, item.coord)
 
 
 class Game(object):
@@ -128,6 +132,7 @@ class Game(object):
         self.screen = screen
         self.board = None
         self.snake = None
+        self.items = []
         self.direction_map = {ord(values.PLAYER_KEYS[0][0]): values.DIRECTION_UP,
                               ord(values.PLAYER_KEYS[0][1]): values.DIRECTION_DOWN,
                               ord(values.PLAYER_KEYS[0][2]): values.DIRECTION_LEFT,
@@ -143,8 +148,11 @@ class Game(object):
         self.snake = Snake()
         self.snake.spawn(self.board)
 
+        self.items.append(Food().spawn(self.board))
+
         while True:
-            self.board.apply({Snake: self.snake.coords})
+            self.items.append(self.snake)
+            self.board.apply(self.items)
             self.board.draw()
             self.screen.refresh()
 
@@ -160,8 +168,15 @@ class Game(object):
             if self.board.within(extrapolate):
                 self.snake.move(self.current_direction)
 
-                if isinstance(self.board.at(extrapolate), BaseItem):
-                    pass
+                item = self.board.at(extrapolate)
+                if isinstance(item, BaseItem):
+                    item.on_touch(self)
+
+                    # Remove the powerup that has already been collected
+                    for i in self.items:
+                        if isinstance(i, item.__class__) and i.coord == item.coord:
+                            self.items.remove(i)
+                            self.items.append(Food().spawn(self.board))
             else:
                 return False
 
