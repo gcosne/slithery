@@ -1,6 +1,6 @@
-*.swn
+*.pyc
 *.swp
 *.swo
-*.pyc
 *.swn
+*.swm
 slithery.log
