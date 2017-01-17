@@ -235,7 +235,7 @@ if __name__ == '__main__':
 
         # Reserved for error messages
         if len(args) != 0:
-            print args[0]
+            print (args[0])
 
         sys.exit()
 
